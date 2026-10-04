@@ -1,0 +1,120 @@
+################################################
+# Workflow name.
+################################################
+name: blazor_docker_azure                                        
+
+
+################################################
+# Define environment variables.
+################################################
+env:
+  AZURE_WEBAPP_NAME:         dockerazuretest            
+  AZURE_WEBAPP_PACKAGE_PATH: bmi2021\published   
+  WORKING_DIRECTORY:         bmi2021  
+  # is this necessary? isn't this set in the build step?
+  CONFIGURATION:             Release
+  
+  # could put these in env settings either.
+  ACTIONS_STEP_DEBUG:   true
+  ACTIONS_RUNNER_DEBUG: true
+
+
+################################################
+# ?emoji When is the workflow triggered.
+################################################
+on:
+ workflow_dispatch:                                     
+ push:                                             
+   branches: [ master ]
+ 
+
+jobs:
+  ################################################
+  # build job.
+  ################################################
+  build:     
+    ################################################
+    # 💻 Specify runner OS.
+    ################################################      
+    runs-on: windows-latest   
+    
+    ################################################
+    # Steps in the build job.
+    ################################################     
+    steps:
+    ################################################
+    # ️➡️ Checkout code.
+    ################################################
+    - name: Checkout code.                            
+      uses: actions/checkout@v5
+      
+    ################################################
+    # 🔧 Set up .NET.
+    ################################################
+    - name: Set up .NET                                 
+      uses: actions/setup-dotnet@v5
+      with:
+        dotnet-version: 10.0.x
+        
+    ################################################
+    # 🧱 Build for Release.
+    ################################################
+    - name: Build for Release                          
+      run: >
+        dotnet build 
+        --configuration Release
+    
+    ################################################
+    # 🧪 Unit tests.
+    ################################################
+    - name: Run unit tests
+      run: >
+        dotnet test BMI_Unit_Test/BMI_Unit_Test.csproj 
+        --collect "Code coverage" -l:trx
+        --no-restore 
+    
+    ################################################
+    # 📘 Publish unit tests.
+    ################################################
+    - name: Publish Unit Test Results
+      uses: dorny/test-reporter@v3
+      with:
+        name:     MS Tests        
+        path:     '**.trx'
+        reporter: 'dotnet-trx'  
+        artifact: ''        
+
+    ########################################################
+    # 📘 Publish the app, i.e., create a deployment package.
+    ########################################################
+    - name: Publish
+      run: > 
+        dotnet publish  ${{ env.WORKING_DIRECTORY }}
+        --configuration ${{ env.CONFIGURATION }} 
+        --output        ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
+        --no-build 
+        
+    
+    ################################################################
+    # ☁️ Deploy to Azure Web apps using publish profile credentials.
+    ################################################################
+    - name: Deploy
+      uses: azure/webapps-deploy@v2
+      with: 
+        app-name:            ${{ env.AZURE_WEBAPP_NAME }}   
+        package:             ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}        
+        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+
+        
+        
+        
+        
+        
+        
+        
+        
+        
+       
+
+
+
