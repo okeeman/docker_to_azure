@@ -21,7 +21,8 @@ env:
 ################################################
 # ?emoji When is the workflow triggered.
 ################################################
-on:                                   
+on:       
+ workflow_dispatch:
  push:                                             
    branches: [ master ]
  
