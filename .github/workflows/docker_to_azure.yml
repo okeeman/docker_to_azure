@@ -9,7 +9,7 @@ name: blazor_docker_azure
 ################################################
 env:
   AZURE_WEBAPP_NAME:         dockerazuretest            
-  AZURE_WEBAPP_PACKAGE_PATH: BlazorApp1\published   
+  AZURE_WEBAPP_PACKAGE_PATH: BlazorApp1   
   WORKING_DIRECTORY:         BlazorApp1  
   CONFIGURATION:             Release
   
